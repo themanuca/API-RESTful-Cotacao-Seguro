@@ -9,3 +9,4 @@ C:\Projeto\Teste tecnico\Omnibees\CreativeTEST\Domain\obj\Debug\net8.0\Domain.dl
 C:\Projeto\Teste tecnico\Omnibees\CreativeTEST\Domain\obj\Debug\net8.0\refint\Domain.dll
 C:\Projeto\Teste tecnico\Omnibees\CreativeTEST\Domain\obj\Debug\net8.0\Domain.pdb
 C:\Projeto\Teste tecnico\Omnibees\CreativeTEST\Domain\obj\Debug\net8.0\ref\Domain.dll
+C:\Projeto\Teste tecnico\Omnibees\CreativeTEST\Domain\obj\Debug\net8.0\Domain.sourcelink.json
