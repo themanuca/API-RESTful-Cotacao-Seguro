@@ -52,9 +52,28 @@ namespace Application.Services
             return (cotacaoDetalhe);
         }
 
-        public Task<CotacaoAcaoDTO> ExcluirAsync(int id, int idParceiro)
+        public async Task<CotacaoAcaoDTO> ExcluirAsync(int id, int idParceiro)
         {
-            throw new NotImplementedException();
+            var cotacao = await _context.Cotacoes
+                    .FirstOrDefaultAsync(c => c.Id == id && c.IdParceiro == idParceiro);
+
+            if (cotacao == null)
+            {
+                return new CotacaoAcaoDTO
+                {
+                    Sucesso = false,
+                    Mensagem = "Cotação não encontrada ou não pertence ao parceiro."
+                };
+            }
+
+            _context.Cotacoes.Remove(cotacao);
+            await _context.SaveChangesAsync();
+
+            return new CotacaoAcaoDTO
+            {
+                Sucesso = true,
+                Mensagem = "Cotação excluída com sucesso."
+            };
         }
 
         public async Task<CotacaoIncluirDTO> IncluirAsync(Cotacao cotacao, int idParceiro)
@@ -95,9 +114,26 @@ namespace Application.Services
             return (cotacaoIncluir);
         }
 
-        public Task<CotacaoListarDTO> ListarAsync(int idParceiro)
+        public async Task<CotacaoListarDTO> ListarAsync(int idParceiro)
         {
-            throw new NotImplementedException();
+            var cotacoes = await _context.Cotacoes
+        .Where(c => c.IdParceiro == idParceiro)
+        .Include(c => c.Produto)
+        .Select(c => new CotacaoItemDTO
+        {
+            Id = c.Id,
+            NomeSegurado = c.NomeSegurado,
+            Documento = c.Documento,
+            NomeProduto = c.Produto.Description
+        })
+        .ToListAsync();
+
+            return new CotacaoListarDTO
+            {
+                Sucesso = true,
+                Cotacoes = cotacoes,
+                Mensagem = "Cotações listadas com sucesso."
+            };
         }
     }
 }
