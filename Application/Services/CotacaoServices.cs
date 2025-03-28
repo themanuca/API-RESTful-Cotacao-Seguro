@@ -19,9 +19,49 @@ namespace Application.Services
         {
             _context = context;
         }
-        public Task<CotacaoAcaoDTO> AlterarAsync(int id, Cotacao cotacao, int idParceiro)
+        public async Task<CotacaoAcaoDTO> AlterarAsync(int id, Cotacao cotacao, int idParceiro)
         {
-            throw new NotImplementedException();
+            var existing = await _context.Cotacoes
+                    .FirstOrDefaultAsync(c => c.Id == id && c.IdParceiro == idParceiro);
+
+            if (existing == null)
+            {
+                return new CotacaoAcaoDTO
+                {
+                    Sucesso = false,
+                    Mensagem = "Cotação não encontrada ou não pertence ao parceiro."
+                };
+            }
+
+            var produto = await _context.Produtos.FindAsync(cotacao.IdProduto);
+            if (produto == null)
+            {
+                return new CotacaoAcaoDTO
+                {
+                    Sucesso = false,
+                    Mensagem = "Produto não encontrado."
+                };
+            }
+
+            existing.IdProduto = cotacao.IdProduto;
+            existing.NomeSegurado = cotacao.NomeSegurado;
+            existing.DDD = cotacao.DDD;
+            existing.Telefone = cotacao.Telefone;
+            existing.Endereco = cotacao.Endereco;
+            existing.CEP = cotacao.CEP;
+            existing.Documento = cotacao.Documento;
+            existing.Nascimento = cotacao.Nascimento;
+            existing.Premio = cotacao.Premio;
+            existing.ImportanciaSegurada = cotacao.ImportanciaSegurada;
+            existing.DataAtualizacao = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return new CotacaoAcaoDTO
+            {
+                Sucesso = true,
+                Mensagem = "Cotação atualizada com sucesso."
+            };
         }
 
         public async Task<CotacaoDetalharDTO> DetalharAsync(int id, int idParceiro)

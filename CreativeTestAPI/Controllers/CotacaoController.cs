@@ -1,7 +1,9 @@
 ﻿using Domain.DTOs;
 using Domain.Entities.Models;
 using Domain.Interfaces;
+using Infra.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CreativeTestAPI.Controllers
 {
@@ -11,9 +13,12 @@ namespace CreativeTestAPI.Controllers
     public class CotacaoController : ControllerBase
     {
         private readonly ICotacaoService _cotacaoService;
-        public CotacaoController(ICotacaoService cotacaoService)
+        private readonly AppDbContext _context;
+
+        public CotacaoController(ICotacaoService cotacaoService, AppDbContext context)
         {
             _cotacaoService = cotacaoService;
+            _context = context;
         }
 
         [HttpPost]
@@ -38,8 +43,10 @@ namespace CreativeTestAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Detalhar(int id)
         {
-            var idParceiro = (int)HttpContext.Items["IdParceiro"];
-            var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, idParceiro);
+            var parceiro = await _context.Parceiros
+                            .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
+            if (parceiro == null)
+                return Unauthorized("Parceiro inválido"); var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, parceiro.Id);
 
             if (!cotacaoDetalhar.Sucesso)
             {
