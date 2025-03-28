@@ -17,7 +17,7 @@ namespace CreativeTestAPI.Controllers
         public IActionResult GetProdutos()
         {
             var produtos = _context.Produtos.ToList();
-            return Ok(produtos);
+            return Ok("ATE AQUI !!!");
         }
     }
 }
