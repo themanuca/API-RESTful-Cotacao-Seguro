@@ -11,6 +11,7 @@ namespace Domain.DTOs
     {
         public int Id { get; set; }
         public int IdProduto { get; set; }
+        public int IdParceiro { get; set; }
         public DateTime DataCriacao { get; set; }
         public DateTime DataAtualizacao { get; set; }
         public string NomeSegurado { get; set; }
@@ -22,7 +23,6 @@ namespace Domain.DTOs
         public DateTime Nascimento { get; set; }
         public decimal Premio { get; set; }
         public decimal ImportanciaSegurada { get; set; }
-        public Produto Produto { get; set; }
         public List<CotacaoBeneficiario> Beneficiarios { get; set; }
         public List<CotacaoCobertura> Coberturas { get; set; }
     }

@@ -25,8 +25,6 @@ namespace Domain.Entities.Models
         public DateTime Nascimento { get; set; }
         public decimal Premio { get; set; }
         public decimal ImportanciaSegurada { get; set; }
-        public List<CotacaoBeneficiario> Beneficiario { get; set; }
-        public List<CotacaoCobertura> Coberturas { get; set; }
     
     }
 }

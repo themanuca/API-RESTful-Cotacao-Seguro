@@ -10,8 +10,8 @@ namespace Domain.Interfaces
 {
     public interface ICotacaoService
     {
-        Task<CotacaoIncluirDTO> IncluirAsync(Cotacao cotacao, int idParceiro);
-        Task<CotacaoAcaoDTO> AlterarAsync(int id, Cotacao cotacao, int idParceiro);
+        Task<CotacaoIncluirDTO> IncluirAsync(CotacaoDetalheDTO cotacao, int idParceiro);
+        Task<CotacaoAcaoDTO> AlterarAsync(int id, CotacaoDetalheDTO cotacao, int idParceiro);
         Task<CotacaoListarDTO> ListarAsync(int idParceiro);
         Task<CotacaoDetalharDTO> DetalharAsync(int id, int idParceiro);
         Task<CotacaoAcaoDTO> ExcluirAsync(int id, int idParceiro);
