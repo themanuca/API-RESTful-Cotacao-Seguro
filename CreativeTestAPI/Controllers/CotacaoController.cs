@@ -24,13 +24,13 @@ namespace CreativeTestAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Incluir([FromBody] Cotacao cotacao)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
 
-            var idParceiro = (int)HttpContext.Items["IdParceiro"];
-            var cotacaoIncluir = await _cotacaoService.IncluirAsync(cotacao, idParceiro);
+            //var idParceiro = (int)HttpContext.Items["IdParceiro"];
+            var cotacaoIncluir = await _cotacaoService.IncluirAsync(cotacao, 1);
 
             if (!cotacaoIncluir.Sucesso)
             {
@@ -43,10 +43,11 @@ namespace CreativeTestAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Detalhar(int id)
         {
-            var parceiro = await _context.Parceiros
-                            .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
-            if (parceiro == null)
-                return Unauthorized("Parceiro inválido"); var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, parceiro.Id);
+            //var parceiro = await _context.Parceiros
+            //                .FirstOrDefaultAsync(p => p.Id == id);
+            //if (parceiro == null)
+            //    return Unauthorized("Parceiro inválido"); 
+            var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, 1);
 
             if (!cotacaoDetalhar.Sucesso)
             {

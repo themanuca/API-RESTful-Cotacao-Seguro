@@ -16,7 +16,7 @@ namespace Application.Services
         }
         public async Task<CotacaoAcaoDTO> AlterarAsync(int idCotacao, CotacaoBeneficiario beneficiario, int idParceiro)
         {
-            var cotacao = await _context.Cotacoes
+            var cotacao = await _context.Cotacao
                             .FirstOrDefaultAsync(c => c.Id == idCotacao && c.IdParceiro == idParceiro);
             if (cotacao == null)
             {
@@ -37,13 +37,13 @@ namespace Application.Services
                 };
             }
 
-            var existing = await _context.CotacaoBeneficiarios
-                .FirstOrDefaultAsync(b => b.Id == beneficiario.Id && b.IdCotacao == idCotacao);
+            var existing = await _context.CotacaoBeneficiario
+                .FirstOrDefaultAsync(b => b.Id == beneficiario.Id && b.CotacaoId == idCotacao);
 
             if (existing == null)
             {
-                beneficiario.IdCotacao = idCotacao;
-                _context.CotacaoBeneficiarios.Add(beneficiario);
+                beneficiario.CotacaoId = idCotacao;
+                _context.CotacaoBeneficiario.Add(beneficiario);
             }
             else
             {
@@ -51,6 +51,21 @@ namespace Application.Services
                 existing.Percentual = beneficiario.Percentual;
                 existing.IdParentesco = beneficiario.IdParentesco;
             }
+
+            if (cotacao.Beneficiario != null && cotacao.Beneficiario.Any())
+            {
+                var somaPercentual = cotacao.Beneficiario.Sum(b => b.Percentual);
+                if (somaPercentual != 100)
+                {
+                  return  new CotacaoAcaoDTO
+                    {
+                        Sucesso = false,
+                        Mensagem = "A soma dos porcentuais dos beneficiários deve ser 100."
+                    };
+                }
+
+                cotacao.Beneficiario = cotacao.Beneficiario.OrderBy(b => b.IdParentesco).ToList();
+            }   
 
             await _context.SaveChangesAsync();
 
@@ -63,15 +78,18 @@ namespace Application.Services
 
         public async Task<CotacaoBeneficiario> DetalharAsync(int idCotacao, int idBeneficiario, int idParceiro)
         {
-            return await _context.CotacaoBeneficiarios
-                            .Include(b => b.TipoParentesco)
-                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.IdCotacao == idCotacao && b.Cotacao.IdParceiro == idParceiro);
+            if(idBeneficiario <= 0 || idCotacao <= 0)
+            {
+                throw new Exception("Dados ausentes.");
+            }
+            return await _context.CotacaoBeneficiario
+                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.CotacaoId == idCotacao);
         }
 
         public async Task<CotacaoAcaoDTO> ExcluirAsync(int idCotacao, int idBeneficiario, int idParceiro)
         {
-            var beneficiario = await _context.CotacaoBeneficiarios
-                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.IdCotacao == idCotacao && b.Cotacao.IdParceiro == idParceiro);
+            var beneficiario = await _context.CotacaoBeneficiario
+                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.CotacaoId == idCotacao);
             if (beneficiario == null)
             {
                 return new CotacaoAcaoDTO
@@ -81,7 +99,7 @@ namespace Application.Services
                 };
             }
 
-            _context.CotacaoBeneficiarios.Remove(beneficiario);
+            _context.CotacaoBeneficiario.Remove(beneficiario);
             await _context.SaveChangesAsync();
 
             return new CotacaoAcaoDTO
@@ -93,9 +111,8 @@ namespace Application.Services
 
         public async Task<List<CotacaoBeneficiario>> ListarAsync(int idCotacao, int idParceiro)
         {
-            return await _context.CotacaoBeneficiarios
-                            .Where(b => b.IdCotacao == idCotacao && b.Cotacao.IdParceiro == idParceiro)
-                            .Include(b => b.TipoParentesco)
+            return await _context.CotacaoBeneficiario
+                            .Where(b => b.CotacaoId == idCotacao)
                             .ToListAsync();
         }
     }

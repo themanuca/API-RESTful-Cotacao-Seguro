@@ -16,7 +16,7 @@ namespace CreativeTestAPI.Controllers
         [HttpGet]
         public IActionResult GetProdutos()
         {
-            var produtos = _context.Produtos.ToList();
+            var produtos = _context.Produto.ToList();
             return Ok("ATE AQUI !!!");
         }
     }

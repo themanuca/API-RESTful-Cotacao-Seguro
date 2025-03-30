@@ -12,7 +12,5 @@ namespace Domain.Entities.Models
         public decimal? ValorDesconto { get; set; }
         public decimal? ValorAgravo { get; set; }
         public decimal ValorTotal { get; set; }
-        public Cotacao Cotacao { get; set; }
-        public Cobertura Cobertura { get; set; }
     }
 }

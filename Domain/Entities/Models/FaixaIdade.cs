@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Entities.Models
 {
-    public class FaixaIdade
+    public class FaixaIdade 
     {
         [Key]
         public int Id { get; set; }

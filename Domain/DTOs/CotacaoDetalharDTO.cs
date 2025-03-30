@@ -10,7 +10,7 @@ namespace Domain.DTOs
     public class CotacaoDetalharDTO
     {
         public bool Sucesso { get; set; }
-        public Cotacao Cotacao { get; set; }
+        public CotacaoDetalheDTO Cotacao { get; set; }
         public string Mensagem { get; set; }
     }
 }

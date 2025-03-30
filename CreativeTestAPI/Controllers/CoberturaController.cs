@@ -22,7 +22,7 @@ namespace CreativeTestAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> IncluirCoberturaPorIdCotacao(int idCotacao, [FromBody] CotacaoCobertura cobertura)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
@@ -37,7 +37,7 @@ namespace CreativeTestAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> RecupearCoberturasPorIdCotacao(int idCotacao)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
@@ -49,7 +49,7 @@ namespace CreativeTestAPI.Controllers
         [HttpDelete("{idCobertura}")]
         public async Task<IActionResult> ExcluirCobertura(int idCotacao, int idCobertura)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");

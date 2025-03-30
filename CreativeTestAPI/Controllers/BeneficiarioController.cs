@@ -22,7 +22,7 @@ namespace CreativeTestAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> AlterarListaBeneficiario(int idCotacao, [FromBody] CotacaoBeneficiario beneficiario)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
@@ -37,7 +37,7 @@ namespace CreativeTestAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> ReuperarListaBeneficiariPorIdCotacao(int idCotacao)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
@@ -49,12 +49,12 @@ namespace CreativeTestAPI.Controllers
         [HttpGet("{idBeneficiario}")]
         public async Task<IActionResult> RecuperarBenefificiarioCompleto(int idCotacao, int idBeneficiario)
         {
-            var parceiro = await _context.Parceiros
-                .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
-            if (parceiro == null)
-                return Unauthorized("Parceiro inválido");
+            //var parceiro = await _context.Parceiros
+            //    .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
+            //if (parceiro == null)
+            //    return Unauthorized("Parceiro inválido");
 
-            var beneficiario = await _beneficiarioService.DetalharAsync(idCotacao, idBeneficiario, parceiro.Id);
+            var beneficiario = await _beneficiarioService.DetalharAsync(idCotacao, idBeneficiario, 1);
             if (beneficiario == null)
                 return NotFound("Beneficiário não encontrado ou não pertence à cotação do parceiro.");
 
@@ -64,7 +64,7 @@ namespace CreativeTestAPI.Controllers
         [HttpDelete("{idBeneficiario}")]
         public async Task<IActionResult> ExcluirBeneficiarioPorIdCotacao(int idCotacao, int idBeneficiario)
         {
-            var parceiro = await _context.Parceiros
+            var parceiro = await _context.Parceiro
                 .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
