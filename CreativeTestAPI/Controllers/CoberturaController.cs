@@ -12,22 +12,22 @@ namespace CreativeTestAPI.Controllers
     {
         private readonly ICoberturaService _coberturaService;
         private readonly AppDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAcessor;
 
-        public CoberturaController(ICoberturaService coberturaService, AppDbContext context)
+        public CoberturaController(ICoberturaService coberturaService, AppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _coberturaService = coberturaService;
             _context = context;
+            _httpContextAcessor = httpContextAccessor;
         }
 
         [HttpPost]
         public async Task<IActionResult> IncluirCoberturaPorIdCotacao(int idCotacao, [FromBody] CotacaoCobertura cobertura)
         {
-            var parceiro = await _context.Parceiro
-                .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
-            if (parceiro == null)
-                return Unauthorized("Parceiro inválido");
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
+            
 
-            var result = await _coberturaService.IncluirAsync(idCotacao, cobertura, 1);
+            var result = await _coberturaService.IncluirAsync(idCotacao, cobertura, idParceiro);
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
@@ -37,24 +37,18 @@ namespace CreativeTestAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> RecupearCoberturasPorIdCotacao(int idCotacao)
         {
-            var parceiro = await _context.Parceiro
-                .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
-            if (parceiro == null)
-                return Unauthorized("Parceiro inválido");
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
 
-            var coberturas = await _coberturaService.ListarAsync(idCotacao, 1);
+            var coberturas = await _coberturaService.ListarAsync(idCotacao, idParceiro);
             return Ok(coberturas);
         }
 
         [HttpDelete("{idCobertura}")]
         public async Task<IActionResult> ExcluirCobertura(int idCotacao, int idCobertura)
         {
-            var parceiro = await _context.Parceiro
-                .FirstOrDefaultAsync(p => p.Secret == Request.Headers["Secret"]);
-            if (parceiro == null)
-                return Unauthorized("Parceiro inválido");
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
 
-            var result = await _coberturaService.ExcluirAsync(idCotacao, idCobertura, 1);
+            var result = await _coberturaService.ExcluirAsync(idCotacao, idCobertura, idParceiro);
             if (!result.Sucesso)
                 return NotFound(result.Mensagem);
 

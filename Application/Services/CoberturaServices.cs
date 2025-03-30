@@ -14,7 +14,6 @@ namespace Application.Services
     public class CoberturaServices : ICoberturaService
     {
         private readonly AppDbContext _context;
-
         public CoberturaServices(AppDbContext context)
         {
             _context = context;
@@ -149,7 +148,10 @@ namespace Application.Services
         {
             var hoje = DateTime.Now;
             var idade = hoje.Year - cotacao.Nascimento.Year;
-            if (cotacao.Nascimento.Date > hoje.AddYears(-idade)) idade--;
+            if (cotacao.Nascimento.Date > hoje.AddYears(-idade))
+            {
+                idade--;
+            }
 
             if (idade < 6 || idade > 65)
             {
