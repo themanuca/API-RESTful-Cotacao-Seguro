@@ -27,7 +27,7 @@ namespace CreativeTestAPI.Controllers
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
 
-            var result = await _coberturaService.IncluirAsync(idCotacao, cobertura, parceiro.Id);
+            var result = await _coberturaService.IncluirAsync(idCotacao, cobertura, 1);
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
@@ -42,7 +42,7 @@ namespace CreativeTestAPI.Controllers
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
 
-            var coberturas = await _coberturaService.ListarAsync(idCotacao, parceiro.Id);
+            var coberturas = await _coberturaService.ListarAsync(idCotacao, 1);
             return Ok(coberturas);
         }
 
@@ -54,7 +54,7 @@ namespace CreativeTestAPI.Controllers
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
 
-            var result = await _coberturaService.ExcluirAsync(idCotacao, idCobertura, parceiro.Id);
+            var result = await _coberturaService.ExcluirAsync(idCotacao, idCobertura, 1);
             if (!result.Sucesso)
                 return NotFound(result.Mensagem);
 

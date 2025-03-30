@@ -42,7 +42,7 @@ namespace CreativeTestAPI.Controllers
             if (parceiro == null)
                 return Unauthorized("Parceiro inválido");
 
-            var beneficiarios = await _beneficiarioService.ListarAsync(idCotacao, parceiro.Id);
+            var beneficiarios = await _beneficiarioService.ListarAsync(idCotacao, 1);
             return Ok(beneficiarios);
         }
 

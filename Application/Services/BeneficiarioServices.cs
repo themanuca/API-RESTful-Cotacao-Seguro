@@ -18,6 +18,7 @@ namespace Application.Services
         {
             var cotacao = await _context.Cotacao
                             .FirstOrDefaultAsync(c => c.Id == idCotacao && c.IdParceiro == idParceiro);
+
             if (cotacao == null)
             {
                 return new CotacaoAcaoDTO
@@ -26,7 +27,7 @@ namespace Application.Services
                     Mensagem = "Cotação não encontrada ou não pertence ao parceiro."
                 };
             }
-            var tipoParentesco = await _context.TiposParentesco
+            var tipoParentesco = await _context.TipoParentesco
                 .FirstOrDefaultAsync(tp => tp.Id == beneficiario.IdParentesco);
             if (tipoParentesco == null)
             {
@@ -38,11 +39,11 @@ namespace Application.Services
             }
 
             var existing = await _context.CotacaoBeneficiario
-                .FirstOrDefaultAsync(b => b.Id == beneficiario.Id && b.CotacaoId == idCotacao);
+                .FirstOrDefaultAsync(b => b.Id == beneficiario.Id && b.IdCotacao == idCotacao);
 
             if (existing == null)
             {
-                beneficiario.CotacaoId = idCotacao;
+                beneficiario.IdCotacao = idCotacao;
                 _context.CotacaoBeneficiario.Add(beneficiario);
             }
             else
@@ -51,21 +52,6 @@ namespace Application.Services
                 existing.Percentual = beneficiario.Percentual;
                 existing.IdParentesco = beneficiario.IdParentesco;
             }
-
-            if (cotacao.Beneficiario != null && cotacao.Beneficiario.Any())
-            {
-                var somaPercentual = cotacao.Beneficiario.Sum(b => b.Percentual);
-                if (somaPercentual != 100)
-                {
-                  return  new CotacaoAcaoDTO
-                    {
-                        Sucesso = false,
-                        Mensagem = "A soma dos porcentuais dos beneficiários deve ser 100."
-                    };
-                }
-
-                cotacao.Beneficiario = cotacao.Beneficiario.OrderBy(b => b.IdParentesco).ToList();
-            }   
 
             await _context.SaveChangesAsync();
 
@@ -83,13 +69,13 @@ namespace Application.Services
                 throw new Exception("Dados ausentes.");
             }
             return await _context.CotacaoBeneficiario
-                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.CotacaoId == idCotacao);
+                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.IdCotacao == idCotacao);
         }
 
         public async Task<CotacaoAcaoDTO> ExcluirAsync(int idCotacao, int idBeneficiario, int idParceiro)
         {
             var beneficiario = await _context.CotacaoBeneficiario
-                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.CotacaoId == idCotacao);
+                            .FirstOrDefaultAsync(b => b.Id == idBeneficiario && b.IdCotacao == idCotacao);
             if (beneficiario == null)
             {
                 return new CotacaoAcaoDTO
@@ -112,7 +98,7 @@ namespace Application.Services
         public async Task<List<CotacaoBeneficiario>> ListarAsync(int idCotacao, int idParceiro)
         {
             return await _context.CotacaoBeneficiario
-                            .Where(b => b.CotacaoId == idCotacao)
+                            .Where(b => b.IdCotacao == idCotacao)
                             .ToListAsync();
         }
     }

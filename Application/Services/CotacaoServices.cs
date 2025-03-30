@@ -15,16 +15,21 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private List<CotacaoItemDTO> _listaCotacoDTO = [];
-        public CotacaoServices(AppDbContext context)
+        private readonly IBeneficiarioService _beneficiarioService;
+        private readonly ICoberturaService _coberturaService;
+        public CotacaoServices(AppDbContext context, IBeneficiarioService beneficiarioService , ICoberturaService coberturaService)
         {
             _context = context;
+            _beneficiarioService = beneficiarioService;
+            _coberturaService = coberturaService;
         }
-        public async Task<CotacaoAcaoDTO> AlterarAsync(int id, Cotacao cotacao, int idParceiro)
+        public async Task<CotacaoAcaoDTO> AlterarAsync(int id, CotacaoDetalheDTO cotacao, int idParceiro)
         {
             var existe = await _context.Cotacao
-                .Include(c => c.Coberturas)
-                .Include(c => c.Beneficiario)
-                .FirstOrDefaultAsync(c => c.Id == id && c.IdParceiro == idParceiro);
+                .FirstOrDefaultAsync(c => c.Id == cotacao.Id && c.IdParceiro == idParceiro);
+
+            var beneficiarioList = await _context.CotacaoBeneficiario.Where(b => b.IdCotacao == cotacao.Id).ToListAsync();
+            var cotacaoCobertura = await _context.CotacaoCobertura.Where(b => b.IdCotacao == cotacao.Id).ToListAsync();
 
             if (existe == null)
             {
@@ -54,9 +59,9 @@ namespace Application.Services
                 };
             }
 
-            if (cotacao.Coberturas != null && cotacao.Coberturas.Any())
+            if (cotacaoCobertura != null && cotacaoCobertura.Any())
             {
-                var coberturaValida = ValidarCoberturas(cotacao.Coberturas);
+                var coberturaValida = ValidarCoberturas(cotacaoCobertura);
                 if (!coberturaValida.Sucesso)
                 {
                     return new CotacaoAcaoDTO
@@ -66,7 +71,7 @@ namespace Application.Services
                     };
                 }
 
-                var calculoDesconto = CalcularDescontoEAgravo(cotacao.Coberturas, faixaEtariaValido.FaixaIdade);
+                var calculoDesconto = CalcularDescontoEAgravo(cotacaoCobertura, faixaEtariaValido.FaixaIdade);
                 if (!calculoDesconto.Sucesso)
                 {
                     return new CotacaoAcaoDTO
@@ -77,9 +82,9 @@ namespace Application.Services
                 }
             }
 
-            if (cotacao.Beneficiario != null && cotacao.Beneficiario.Any())
+            if (beneficiarioList != null && beneficiarioList.Any())
             {
-                var beneficiarioValido = ValidarBeneficiarios(cotacao.Beneficiario);
+                var beneficiarioValido = ValidarBeneficiarios(beneficiarioList);
                 if (!beneficiarioValido.Sucesso)
                 {
                     return new CotacaoAcaoDTO
@@ -99,7 +104,7 @@ namespace Application.Services
                 };
             }
 
-            var importanciaSegura = ValidarImportanciaSegurada(cotacao, produto);
+            var importanciaSegura = ValidarImportanciaSegurada(existe, produto);
             if (!importanciaSegura.Sucesso)
             {
                 return new CotacaoAcaoDTO
@@ -119,15 +124,9 @@ namespace Application.Services
             existe.Nascimento = cotacao.Nascimento;
             existe.ImportanciaSegurada = cotacao.ImportanciaSegurada;
 
-            if (cotacao.Beneficiario != null && cotacao.Beneficiario.Any())
+            if (cotacaoCobertura != null && cotacaoCobertura.Any())
             {
-                existe.Beneficiario = cotacao.Beneficiario;
-                OrdenarBeneficiarios(existe);
-            }
-            if (cotacao.Coberturas != null && cotacao.Coberturas.Any())
-            {
-                existe.Coberturas = cotacao.Coberturas;
-                existe.Premio = CalcularPremio(produto, existe.Coberturas);
+                existe.Premio = CalcularPremio(produto, cotacaoCobertura);
             }
 
             existe.DataAtualizacao = DateTime.Now;
@@ -145,6 +144,7 @@ namespace Application.Services
         {
             var cotacao = await _context.Cotacao.FirstOrDefaultAsync(c => c.Id == id && c.IdParceiro == idParceiro);
 
+
             if (cotacao == null)
             {   
                 return (new CotacaoDetalharDTO 
@@ -154,6 +154,10 @@ namespace Application.Services
                     Mensagem = "Cotação não encontrada ou não pertence ao parceiro." 
                 });
             }
+
+            var beneficiarioList = await _context.CotacaoBeneficiario.Where(b => b.IdCotacao == cotacao.Id).ToListAsync();
+            var cotacaoCobertura = await _context.CotacaoCobertura.Where(b => b.IdCotacao == cotacao.Id).ToListAsync();
+
             var cotacaoDetalhe = new CotacaoDetalharDTO
             {
                 Sucesso = true,
@@ -172,8 +176,8 @@ namespace Application.Services
                     Nascimento = cotacao.Nascimento,
                     Premio = cotacao.Premio,
                     ImportanciaSegurada = cotacao.ImportanciaSegurada,
-                    Beneficiarios = cotacao.Beneficiario,
-                    Coberturas = cotacao.Coberturas
+                    Beneficiarios = beneficiarioList,
+                    Coberturas = cotacaoCobertura
                 },
                 Mensagem = "Detalhes da cotação obtidos com sucesso."
             };
@@ -204,7 +208,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<CotacaoIncluirDTO> IncluirAsync(Cotacao cotacao, int idParceiro)
+        public async Task<CotacaoIncluirDTO> IncluirAsync(CotacaoDetalheDTO cotacao, int idParceiro)
         {
 
             var cotacaoIncluir = new CotacaoIncluirDTO();
@@ -245,7 +249,7 @@ namespace Application.Services
                 return cotacaoIncluir;
             }
 
-            var beneficiarioValido = ValidarBeneficiarios(cotacao.Beneficiario);
+            var beneficiarioValido = ValidarBeneficiarios(cotacao.Beneficiarios);
             if (!beneficiarioValido.Sucesso)
             {
                 cotacaoIncluir.Sucesso = false;
@@ -275,27 +279,61 @@ namespace Application.Services
                 return (cotacaoIncluir);
             }
 
-            var importanciaSegura = ValidarImportanciaSegurada(cotacao, produto);
-            if (!importanciaSegura.Sucesso)
-            {
-                cotacaoIncluir.Sucesso = false;
-                cotacaoIncluir.IdCotacao = 0;
-                cotacaoIncluir.Mensagem = importanciaSegura.Mensagem;
-                return cotacaoIncluir;
-            }
+            //var importanciasegura = ValidarImportanciaSegurada(cotacao, produto);
+            //if (!importanciasegura.sucesso)
+            //{
+            //    cotacaoincluir.sucesso = false;
+            //    cotacaoincluir.idcotacao = 0;
+            //    cotacaoincluir.mensagem = importanciasegura.mensagem;
+            //    return cotacaoincluir;
+            //}
 
-            OrdenarBeneficiarios(cotacao);
+            //ordenarbeneficiarios(cotacao);
 
             cotacao.Premio = CalcularPremio(produto, cotacao.Coberturas);
             cotacao.IdParceiro = idParceiro;
             cotacao.DataCriacao = DateTime.Now;
             cotacao.DataAtualizacao = DateTime.Now;
 
-            _context.Cotacao.Add(cotacao);
-            await _context.SaveChangesAsync();
+            var cotacaoSalvar = new Cotacao
+            {
+                IdProduto = produto.Id,
+                DataCriacao = DateTime.Now,
+                IdParceiro = idParceiro,
+                NomeSegurado = cotacao.NomeSegurado,
+                DDD = cotacao.DDD,
+                Telefone = cotacao.Telefone,
+                Endereco = cotacao.Endereco,
+                CEP = cotacao.CEP,
+                Documento = cotacao.Documento,
+                Nascimento = cotacao.Nascimento,
+                Premio = cotacao.Premio,
+                ImportanciaSegurada = cotacao.ImportanciaSegurada
+            };
 
+            _context.Cotacao.Add(cotacaoSalvar);
+            await _context.SaveChangesAsync();
+            var idCotacao = cotacaoSalvar.Id;
+            if (idCotacao > 0)
+            {
+                if(cotacao.Beneficiarios.Count > 0)
+                {
+                    foreach (var beneficio in cotacao.Beneficiarios)
+                    {
+                        await _beneficiarioService.AlterarAsync(idCotacao, beneficio, idParceiro);
+                    }
+
+                } 
+                 if(cotacao.Coberturas.Count > 0)
+                {
+                    foreach(var cobertura in cotacao.Coberturas)
+                    {
+                       await _coberturaService.IncluirAsync(idCotacao, cobertura, idParceiro);
+                    }
+                }
+            }
             cotacaoIncluir.Sucesso = true;
-            cotacaoIncluir.IdCotacao = cotacao.Id;
+            cotacaoIncluir.IdCotacao = idCotacao;
             cotacaoIncluir.Mensagem = "Cotação criada com sucesso.";
 
             return (cotacaoIncluir);
@@ -311,15 +349,15 @@ namespace Application.Services
             {
                 if(cotacao.IdProduto > 0)
                 {
-                    var parceiro = await _context.Produto.FirstOrDefaultAsync(c => c.Id == cotacao.IdProduto);
-                    if (parceiro?.Description.Length > 0)
+                    var produto = await _context.Produto.FirstOrDefaultAsync(c => c.Id == cotacao.IdProduto);
+                    if (produto?.Description.Length > 0)
                     {
                         _listaCotacoDTO.Add(new CotacaoItemDTO
                         {
                             Id = cotacao.Id,
                             NomeSegurado = cotacao.NomeSegurado,
                             Documento = cotacao.Documento,
-                            NomeProduto = parceiro.Description
+                            NomeProduto = produto.Description
                         });
                     };
                 }
@@ -344,7 +382,7 @@ namespace Application.Services
             };
         }
 
-        private CotacaoAcaoDTO ValidarDDDeTelefone(Cotacao cotacao)
+        private CotacaoAcaoDTO ValidarDDDeTelefone(CotacaoDetalheDTO cotacao)
         {
             if (cotacao.DDD.HasValue && !cotacao.Telefone.HasValue)
             {
@@ -368,7 +406,7 @@ namespace Application.Services
             };
         }
 
-        private CotacaoFaixaEtariaDTO ValidarFaixaEtaria(Cotacao cotacao)
+        private CotacaoFaixaEtariaDTO ValidarFaixaEtaria(CotacaoDetalheDTO cotacao)
         {
             var hoje = DateTime.Now;
             var idade = hoje.Year - cotacao.Nascimento.Year;
@@ -537,11 +575,11 @@ namespace Application.Services
 
         }
 
-        private void OrdenarBeneficiarios(Cotacao cotacao)
+        private void OrdenarBeneficiarios(List<CotacaoBeneficiario> beneficiario)
         {
-            if (cotacao.Beneficiario != null && cotacao.Beneficiario.Any())
+            if (beneficiario != null && beneficiario.Any())
             {
-                cotacao.Beneficiario = cotacao.Beneficiario.OrderBy(b => b.IdParentesco).ToList();
+                beneficiario = beneficiario.OrderBy(b => b.IdParentesco).ToList();
             }
         }
 

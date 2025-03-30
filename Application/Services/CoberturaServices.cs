@@ -21,8 +21,8 @@ namespace Application.Services
         }
         public async Task<CotacaoAcaoDTO> ExcluirAsync(int idCotacao, int idCobertura, int idParceiro)
         {
-            var cobertura = await _context.CotacaoCoberturas
-            .FirstOrDefaultAsync(c => c.Id == idCobertura && c.IdCotacao == idCotacao);
+            var cobertura = await _context.CotacaoCobertura
+            .FirstOrDefaultAsync(c => c.IdCobertura == idCobertura && c.IdCotacao == idCotacao);
             if (cobertura == null)
             {
                 return new CotacaoAcaoDTO
@@ -32,13 +32,16 @@ namespace Application.Services
                 };
             }
 
-            _context.CotacaoCoberturas.Remove(cobertura);
+            _context.CotacaoCobertura.Remove(cobertura);
 
             var cotacao = await _context.Cotacao
-                .Include(c => c.Coberturas)
                 .FirstOrDefaultAsync(c => c.Id == idCotacao);
             var produto = await _context.Produto.FindAsync(cotacao.IdProduto);
-            cotacao.Premio = CalcularPremio(produto, cotacao.Coberturas.Where(c => c.Id != idCobertura).ToList());
+
+            var coberturaLista = await _context.CotacaoCobertura
+           .Where(c => c.IdCotacao == idCotacao).ToListAsync();
+
+            cotacao.Premio = CalcularPremio(produto, coberturaLista.Where(c => c.Id != idCobertura).ToList());
 
             await _context.SaveChangesAsync();
 
@@ -52,8 +55,12 @@ namespace Application.Services
         public async Task<CotacaoAcaoDTO> IncluirAsync(int idCotacao, CotacaoCobertura cobertura, int idParceiro)
         {
             var cotacao = await _context.Cotacao
-                        .Include(c => c.Coberturas)
                         .FirstOrDefaultAsync(c => c.Id == idCotacao && c.IdParceiro == idParceiro);
+
+
+            var coberturaLista = await _context.CotacaoCobertura
+            .Where(c => c.IdCotacao == idCotacao).ToListAsync();
+
             if (cotacao == null)
             {
                 return new CotacaoAcaoDTO
@@ -63,7 +70,7 @@ namespace Application.Services
                 };
             }
 
-            if (cotacao.Coberturas.Any(c => c.IdCobertura == cobertura.IdCobertura))
+            if (coberturaLista.Any(c => c.IdCobertura == cobertura.IdCobertura))
             {
                 return new CotacaoAcaoDTO
                 {
@@ -82,7 +89,7 @@ namespace Application.Services
                 };
             }
 
-            if (coberturaAux.Type == "Básica" && cotacao.Coberturas.Any(c => _context.Cobertura.Any(cob => cob.Id == c.IdCobertura && cob.Type == "Básica")))
+            if (coberturaAux.Type == "Básica" && coberturaLista.Any(c => _context.Cobertura.Any(cob => cob.Id == c.IdCobertura && cob.Type == "Básica")))
             {
                 return new CotacaoAcaoDTO
                 {
@@ -112,11 +119,11 @@ namespace Application.Services
             }
 
             cobertura.IdCotacao = idCotacao;
-            _context.CotacaoCoberturas.Add(cobertura);
+            _context.CotacaoCobertura.Add(cobertura);
 
             var produto = await _context.Produto.FindAsync(cotacao.IdProduto);
-            cotacao.Coberturas.Add(cobertura);
-            cotacao.Premio = CalcularPremio(produto, cotacao.Coberturas);
+            coberturaLista.Add(cobertura);
+            cotacao.Premio = CalcularPremio(produto, coberturaLista);
 
             await _context.SaveChangesAsync();
 
@@ -129,7 +136,7 @@ namespace Application.Services
 
         public async Task<List<CotacaoCobertura>> ListarAsync(int idCotacao, int idParceiro)
         {
-            return await _context.CotacaoCoberturas
+            return await _context.CotacaoCobertura
                  .Where(c => c.IdCotacao == idCotacao)
                  .ToListAsync();
         }
@@ -156,11 +163,13 @@ namespace Application.Services
                 };
 
             }
+            char[] eliminarString = ['A', 'a', 'n', 'o', 's'];
             var faixa = _context.FaixaIdade.ToList();
-             var faixaIdade = faixa
+
+            var faixaIdade = faixa
                 .FirstOrDefault(f =>
-                    idade >= int.Parse(f.Description.Split(" a ")[0]) &&
-                    idade <= int.Parse(f.Description.Split(" a ")[1]));
+                    idade >= int.Parse(f.Description.Split(eliminarString)[0]) &&
+                    idade <= int.Parse(f.Description.Split(eliminarString)[1]));
 
             if (faixaIdade == null)
             {
