@@ -155,7 +155,10 @@ Garanta que o *TrustServerCertificate=true;* esteja na sua connection para evita
   "DefaultConnection": "Server=localhost;Database=OmniBeesCreativeDB;Encrypt=true;TrustServerCertificate=true;User Id=seu_user;Password=seu_pass;"
 },
 ```
+### Rodar o projeto:
 
-
-
+Após clonar o repositorio, caminhe até o local do projeto rode o comando para garantir que todas as bibliotecas necessárias instalará:
+```
+dotnet restore
+```
 
