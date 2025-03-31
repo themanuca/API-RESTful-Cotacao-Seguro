@@ -11,8 +11,7 @@ namespace Infra.Data
 
         public DbSet<Cotacao> Cotacao { get; set; }
         public DbSet<CotacaoBeneficiario> CotacaoBeneficiario { get; set; }
-        public DbSet<CotacaoCobertura> CotacaoCobertura
-        { get; set; }
+        public DbSet<CotacaoCobertura> CotacaoCobertura { get; set; }
         public DbSet<Produto> Produto { get; set; }
         public DbSet<Parceiro> Parceiro { get; set; }
         public DbSet<TipoParentesco> TipoParentesco { get; set; }

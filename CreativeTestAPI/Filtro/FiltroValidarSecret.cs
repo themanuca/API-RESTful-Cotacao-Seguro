@@ -14,6 +14,11 @@ namespace CreativeTestAPI.Filtro
         }
         public void OnActionExecuted(ActionExecutedContext context)
         {
+            throw new NotImplementedException();
+        }
+
+        public void OnActionExecuting(ActionExecutingContext context)
+        {
             if (!context.HttpContext.Request.Headers.TryGetValue("X-Parceiro-Secret", out var secretValue))
             {
                 context.Result = new BadRequestObjectResult("O header 'X-Parceiro-Secret' é obrigatório.");
@@ -21,7 +26,7 @@ namespace CreativeTestAPI.Filtro
             }
 
             var parceiro = _context.Parceiro
-                .FirstOrDefault(p => p.Secret == secretValue);
+                .FirstOrDefault(p => p.Secret == secretValue.ToString());
 
             if (parceiro == null)
             {
@@ -30,11 +35,7 @@ namespace CreativeTestAPI.Filtro
             }
 
             context.HttpContext.Items["IdParceiro"] = parceiro.Id;
-        }
 
-        public void OnActionExecuting(ActionExecutingContext context)
-        {
-            throw new NotImplementedException();
         }
     }
 }

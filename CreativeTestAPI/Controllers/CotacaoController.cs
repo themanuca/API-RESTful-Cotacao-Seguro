@@ -14,17 +14,22 @@ namespace CreativeTestAPI.Controllers
     {
         private readonly ICotacaoService _cotacaoService;
         private readonly AppDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAcessor;
 
-        public CotacaoController(ICotacaoService cotacaoService, AppDbContext context)
+
+        public CotacaoController(ICotacaoService cotacaoService, AppDbContext context, IHttpContextAccessor httpContextAcessor)
         {
             _cotacaoService = cotacaoService;
             _context = context;
+            _httpContextAcessor = httpContextAcessor;
         }
 
         [HttpPost]
         public async Task<IActionResult> Incluir([FromBody] CotacaoDetalheDTO cotacao)
         {
-            var cotacaoIncluir = await _cotacaoService.IncluirAsync(cotacao, 1);
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
+
+            var cotacaoIncluir = await _cotacaoService.IncluirAsync(cotacao, idParceiro);
 
             if (!cotacaoIncluir.Sucesso)
             {
@@ -37,11 +42,10 @@ namespace CreativeTestAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Detalhar(int id)
         {
-            //var parceiro = await _context.Parceiro
-            //                .FirstOrDefaultAsync(p => p.Id == id);
-            //if (parceiro == null)
-            //    return Unauthorized("Parceiro inválido");
-            var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, 1);
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
+
+
+            var cotacaoDetalhar = await _cotacaoService.DetalharAsync(id, idParceiro);
 
             if (!cotacaoDetalhar.Sucesso)
             {
@@ -54,13 +58,7 @@ namespace CreativeTestAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Alterar(int id, [FromBody] CotacaoDetalheDTO cotacao)
         {
-            // Obter o IdParceiro do HttpContext (injetado pelo middleware)
-            if (!HttpContext.Items.TryGetValue("IdParceiro", out var idParceiroObj) || idParceiroObj == null)
-            {
-                return Unauthorized("Parceiro não autenticado.");
-            }
-
-            int idParceiro = (int)idParceiroObj;
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
 
             var cotacaoAcao = await _cotacaoService.AlterarAsync(id, cotacao, idParceiro);
 
@@ -75,13 +73,7 @@ namespace CreativeTestAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> Listar()
         {
-            // Obter o IdParceiro do HttpContext (injetado pelo middleware)
-            if (!HttpContext.Items.TryGetValue("IdParceiro", out var idParceiroObj) || idParceiroObj == null)
-            {
-                return Unauthorized("Parceiro não autenticado.");
-            }
-
-            int idParceiro = (int)idParceiroObj;
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
 
             var cotacaoListar = await _cotacaoService.ListarAsync(idParceiro);
 
@@ -96,13 +88,7 @@ namespace CreativeTestAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Excluir(int id)
         {
-            // Obter o IdParceiro do HttpContext (injetado pelo middleware)
-            if (!HttpContext.Items.TryGetValue("IdParceiro", out var idParceiroObj) || idParceiroObj == null)
-            {
-                return Unauthorized("Parceiro não autenticado.");
-            }
-
-            int idParceiro = (int)idParceiroObj;
+            var idParceiro = (int)_httpContextAcessor.HttpContext.Items["IdParceiro"];
 
             var cotacaoAcao = await _cotacaoService.ExcluirAsync(id, idParceiro);
 
